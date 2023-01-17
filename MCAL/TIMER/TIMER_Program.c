@@ -1,0 +1,94 @@
+/*
+ * TIMER_Program.c
+ *
+ *  Created on: ??þ/??þ/????
+ *      Author: lenovo
+ */
+
+#include "STD_TYPES.h"
+#include "BIT_MATH.h"
+#include "DIO_Interface.h"
+#include "TIMER_Config.h"
+#include "TIMER_Interface.h"
+#include "TIMER_Private.h"
+#include "GIE_Interface.h"
+void (*TIMER0_callBack)(void);
+
+void TIMER_voidCallBack(  void (*ptr_timer)(void) )
+{
+	if (ptr_timer!=NULL)
+	{
+		TIMER0_callBack=ptr_timer;
+	}
+}
+void __vector_11 () __attribute__ ((signal));
+void __vector_11 ()
+{
+
+	TIMER0_callBack();
+
+}
+
+void TIM0_Inti()
+{
+#if MODE == NORMAL_MODE
+	CLR_BIT(TCCR0,TCCR0_WGW01);
+	CLR_BIT(TCCR0,TCCR0_WGW00);
+	SET_BIT(TIMSK, TIMSK_TOIE0);
+#elif MODE==PWM_MODE
+	CLR_BIT(TCCR0,TCCR0_WGW01);
+	SET_BIT(TCCR0,TCCR0_WGW00);
+#elif MODE == CTC_MODE
+	SET_BIT(TCCR0,TCCR0_WGW01);
+	CLR_BIT(TCCR0,TCCR0_WGW00);
+	SET_BIT(TIMSK, TIMSK_TOIE0);
+#elif MODE==FAST_PWM
+	SET_BIT(TCCR0,TCCR0_WGW01);
+	SET_BIT(TCCR0,TCCR0_WGW00);
+#endif
+}
+
+void TIM0_start(void)
+{
+#if PRESCALER == NO_PRESCALER
+	SET_BIT(TCCR0,TCCR0_CS00);
+	CLR_BIT(TCCR0,TCCR0_CS01);
+	CLR_BIT(TCCR0,TCCR0_CS02);
+#elif PRESCALER == PRESCALER_8
+	CLR_BIT(TCCR0,TCCR0_CS00);
+	SET_BIT(TCCR0,TCCR0_CS01);
+	CLR_BIT(TCCR0,TCCR0_CS02);
+#elif PRESCALER == PRESCALER_64
+	SET_BIT(TCCR0,TCCR0_CS00);
+	SET_BIT(TCCR0,TCCR0_CS01);
+	CLR_BIT(TCCR0,TCCR0_CS02);
+#elif PRESCALER == PRESCALER_256
+	CLR_BIT(TCCR0,TCCR0_CS00);
+	CLR_BIT(TCCR0,TCCR0_CS01);
+	SET_BIT(TCCR0,TCCR0_CS02);
+#endif
+
+}
+
+void FASTPWM()
+{
+#if PWM == CLEAR
+	CLR_BIT(TCCR0,TCCR0_COM00);
+	SET_BIT(TCCR0,TCCR0_COM01);
+#elif PWM == NORMAL
+	CLR_BIT(TCCR0,TCCR0_COM00);
+	CLR_BIT(TCCR0,TCCR0_COM01);
+#elif PWM == SET
+	SET_BIT(TCCR0,TCCR0_COM00);
+	SET_BIT(TCCR0,TCCR0_COM01);
+#endif
+}
+
+void TIM0_STOP(void)
+{
+
+	CLR_BIT(TCCR0,TCCR0_CS00);
+	CLR_BIT(TCCR0,TCCR0_CS01);
+	CLR_BIT(TCCR0,TCCR0_CS02);
+}
+
